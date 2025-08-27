@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { attendanceAPI, authAPI } from '../../services/api';
+import apiService from '../../services/api';
 import { 
   GraduationCap, 
   LogOut,
@@ -53,7 +53,7 @@ const EnhancedTeacherDashboard = () => {
       console.log('🔍 Fetching teacher data...');
       
       // Fetch teacher's own details with subjects
-      const teacherResponse = await authAPI.teacher.getMyDetails();
+      const teacherResponse = await apiService.teacher.getProfile();
       if (teacherResponse.success) {
         setTeacherData(teacherResponse.data);
         console.log('✅ Teacher data loaded successfully');

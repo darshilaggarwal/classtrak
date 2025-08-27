@@ -75,6 +75,18 @@ const apiService = {
       return response.data;
     },
 
+    // Student signup initiation
+    initiateStudentSignup: async (rno) => {
+      const response = await api.post('/auth/student/initiate-signup', { rno });
+      return response.data;
+    },
+
+    // Student signup OTP verification
+    verifyStudentSignupOTP: async (rno, otp, password) => {
+      const response = await api.post('/auth/student/verify-signup-otp', { rno, otp, password });
+      return response.data;
+    },
+
     // Teacher login
     teacherLogin: async (credentials) => {
       const response = await api.post('/auth/teacher/login', credentials);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { authAPI } from '../../services/api';
+import apiService from '../../services/api';
 import { GraduationCap, User, Mail, ArrowRight, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
@@ -84,7 +84,7 @@ const SignupPage = () => {
     setStatusMessage('Sending OTP to your registered email...');
     
     try {
-      const response = await authAPI.student.initiateLogin(formData.rno);
+      const response = await apiService.auth.initiateStudentSignup(formData.rno);
       
       if (response.success) {
         setOtpSent(true);
@@ -113,7 +113,7 @@ const SignupPage = () => {
     setStatusMessage('Verifying OTP and setting up your account...');
     
     try {
-      const response = await authAPI.student.verifyOTP(
+      const response = await apiService.auth.verifyStudentSignupOTP(
         formData.rno,
         formData.otp,
         formData.password
@@ -161,7 +161,7 @@ const SignupPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await authAPI.student.initiateLogin(formData.rno);
+      const response = await apiService.auth.initiateStudentSignup(formData.rno);
       
       if (response.success) {
         toast.success('OTP resent successfully!');

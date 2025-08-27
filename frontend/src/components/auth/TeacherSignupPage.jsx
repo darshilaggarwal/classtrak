@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { authAPI } from '../../services/api';
+import apiService from '../../services/api';
 import { GraduationCap, User, Mail, ArrowRight, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
@@ -85,7 +85,7 @@ const TeacherSignupPage = () => {
     setStatusMessage('Sending OTP to your @imaginxp.com email...');
     
     try {
-      const response = await authAPI.teacher.initiateSignup(formData.email);
+      const response = await apiService.auth.initiateTeacherSignup(formData.email);
       
       if (response.success) {
         setOtpSent(true);
@@ -114,7 +114,7 @@ const TeacherSignupPage = () => {
     setStatusMessage('Verifying OTP and setting up your account...');
     
     try {
-      const response = await authAPI.teacher.verifySignupOTP(
+      const response = await apiService.auth.verifyTeacherSignupOTP(
         formData.email,
         formData.otp,
         formData.password
@@ -162,7 +162,7 @@ const TeacherSignupPage = () => {
     setIsLoading(true);
     
     try {
-      const response = await authAPI.teacher.initiateSignup(formData.email);
+      const response = await apiService.auth.initiateTeacherSignup(formData.email);
       
       if (response.success) {
         toast.success('OTP resent successfully!');

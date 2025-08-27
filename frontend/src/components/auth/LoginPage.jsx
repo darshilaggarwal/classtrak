@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { authAPI } from '../../services/api';
+import apiService from '../../services/api';
 import { GraduationCap, Mail, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
@@ -61,10 +61,16 @@ const LoginPage = () => {
       let response;
       
       if (userType === 'student') {
-        response = await authAPI.student.login(formData.identifier, formData.password);
+        response = await apiService.auth.studentLogin({
+          rno: formData.identifier,
+          password: formData.password
+        });
       } else {
-        // Use username login for teachers (testing mode)
-        response = await authAPI.teacher.loginWithUsername(formData.identifier, formData.password);
+        // Use email login for teachers
+        response = await apiService.auth.teacherLogin({
+          email: formData.identifier,
+          password: formData.password
+        });
       }
 
       if (response.success) {

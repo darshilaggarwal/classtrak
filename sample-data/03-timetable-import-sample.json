@@ -1,0 +1,287 @@
+{
+  "batchName": "BTech AIML 5th Sem (2023-27)",
+  "weeklyTimetable": [
+    {
+      "day": "Monday",
+      "periods": [
+        {
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "subjectName": "Data Mining and Prediction by Machines",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "10:35",
+          "endTime": "11:35",
+          "subjectName": "Computer Networks",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "11:55",
+          "endTime": "12:55",
+          "subjectName": "System Design",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "subjectName": "Data and Visual Analytics in AI",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "14:35",
+          "endTime": "15:35",
+          "subjectName": "Natural Language Processing (NLP) and Text Analysis",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "15:40",
+          "endTime": "16:40",
+          "subjectName": "Lab - Computer Networks",
+          "roomNumber": "Lab-1",
+          "isBreak": false
+        }
+      ]
+    },
+    {
+      "day": "Tuesday",
+      "periods": [
+        {
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "subjectName": "System Design",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "10:35",
+          "endTime": "11:35",
+          "subjectName": "Data Mining and Prediction by Machines",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "11:55",
+          "endTime": "12:55",
+          "subjectName": "Computer Networks",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "subjectName": "Natural Language Processing (NLP) and Text Analysis",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "14:35",
+          "endTime": "15:35",
+          "subjectName": "Data and Visual Analytics in AI",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "15:40",
+          "endTime": "16:40",
+          "subjectName": "Lab - Data and Visual Analytics in AI",
+          "roomNumber": "Lab-2",
+          "isBreak": false
+        }
+      ]
+    },
+    {
+      "day": "Wednesday",
+      "periods": [
+        {
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "subjectName": "Computer Networks",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "10:35",
+          "endTime": "11:35",
+          "subjectName": "System Design",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "11:55",
+          "endTime": "12:55",
+          "subjectName": "Data Mining and Prediction by Machines",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "subjectName": "Natural Language Processing (NLP) and Text Analysis",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "14:35",
+          "endTime": "15:35",
+          "subjectName": "Data and Visual Analytics in AI",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "15:40",
+          "endTime": "16:40",
+          "subjectName": "Lab - Natural Language Processing",
+          "roomNumber": "Lab-3",
+          "isBreak": false
+        }
+      ]
+    },
+    {
+      "day": "Thursday",
+      "periods": [
+        {
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "subjectName": "Data and Visual Analytics in AI",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "10:35",
+          "endTime": "11:35",
+          "subjectName": "Natural Language Processing (NLP) and Text Analysis",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "11:55",
+          "endTime": "12:55",
+          "subjectName": "Computer Networks",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "subjectName": "System Design",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "14:35",
+          "endTime": "15:35",
+          "subjectName": "Data Mining and Prediction by Machines",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "15:40",
+          "endTime": "16:40",
+          "subjectName": "Lab - System Design",
+          "roomNumber": "Lab-1",
+          "isBreak": false
+        }
+      ]
+    },
+    {
+      "day": "Friday",
+      "periods": [
+        {
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "subjectName": "Natural Language Processing (NLP) and Text Analysis",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "10:35",
+          "endTime": "11:35",
+          "subjectName": "Data and Visual Analytics in AI",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "11:55",
+          "endTime": "12:55",
+          "subjectName": "System Design",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "subjectName": "Computer Networks",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "14:35",
+          "endTime": "15:35",
+          "subjectName": "Data Mining and Prediction by Machines",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "15:40",
+          "endTime": "16:40",
+          "subjectName": "Lab - Data Mining",
+          "roomNumber": "Lab-2",
+          "isBreak": false
+        }
+      ]
+    },
+    {
+      "day": "Saturday",
+      "periods": [
+        {
+          "startTime": "09:30",
+          "endTime": "10:30",
+          "subjectName": "Data Mining and Prediction by Machines",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "10:35",
+          "endTime": "11:35",
+          "subjectName": "Computer Networks",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "11:55",
+          "endTime": "12:55",
+          "subjectName": "System Design",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "13:00",
+          "endTime": "14:00",
+          "subjectName": "Data and Visual Analytics in AI",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "14:35",
+          "endTime": "15:35",
+          "subjectName": "Natural Language Processing (NLP) and Text Analysis",
+          "roomNumber": "E-508",
+          "isBreak": false
+        },
+        {
+          "startTime": "15:40",
+          "endTime": "16:40",
+          "subjectName": "Lab - Natural Language Processing",
+          "roomNumber": "Lab-3",
+          "isBreak": false
+        }
+      ]
+    }
+  ]
+}

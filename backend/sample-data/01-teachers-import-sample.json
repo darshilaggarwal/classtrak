@@ -1,0 +1,274 @@
+{
+  "teachers": [
+    {
+      "name": "Mr. Tarun Prakash Sharma",
+      "username": "tarun.prakash",
+      "email": "tarun.prakash@imaginxp.com",
+      "phone": "+91-9876543210",
+      "departments": ["BTech AIML", "BTech FSD"],
+      "subjects": [
+        {
+          "name": "Modern Computer Architecture",
+          "code": "MCA",
+          "course": "BTech AIML",
+          "semester": 3
+        },
+        {
+          "name": "System Design",
+          "code": "SD",
+          "course": "BTech AIML",
+          "semester": 5
+        },
+        {
+          "name": "Full Stack Development",
+          "code": "FSD",
+          "course": "BTech FSD",
+          "semester": 5
+        }
+      ]
+    },
+    {
+      "name": "Mr. Chaman Kumar",
+      "username": "chaman.kumar",
+      "email": "chaman.kumar@imaginxp.com",
+      "phone": "+91-9876543211",
+      "departments": ["BTech AIML", "BCA FSD"],
+      "subjects": [
+        {
+          "name": "Introduction to Machine Learning",
+          "code": "ITML",
+          "course": "BTech AIML",
+          "semester": 3
+        },
+        {
+          "name": "Computer Networks",
+          "code": "CN",
+          "course": "BTech AIML",
+          "semester": 5
+        },
+        {
+          "name": "Lab - Computer Networks",
+          "code": "LAB_CN",
+          "course": "BTech AIML",
+          "semester": 5
+        }
+      ]
+    },
+    {
+      "name": "Mr. Anurag Rishi",
+      "username": "anurag.rishi",
+      "email": "anurag.rishi@imaginxp.com",
+      "phone": "+91-9876543212",
+      "departments": ["BTech AIML", "BCA FSD"],
+      "subjects": [
+        {
+          "name": "Operating System",
+          "code": "OS",
+          "course": "BTech AIML",
+          "semester": 3
+        },
+        {
+          "name": "Blockchain Technology",
+          "code": "BT",
+          "course": "BTech AIML",
+          "semester": 7
+        },
+        {
+          "name": "Lab - Operating System",
+          "code": "LAB_OS",
+          "course": "BTech AIML",
+          "semester": 3
+        }
+      ]
+    },
+    {
+      "name": "Mr. Mo. Ahsan Ahmed",
+      "username": "ahsan.ahmed",
+      "email": "ahsan.ahmad@imaginxp.com",
+      "phone": "+91-9876543213",
+      "departments": ["BTech AIML", "BCA FSD"],
+      "subjects": [
+        {
+          "name": "Algorithm Analysis and Design",
+          "code": "AAD",
+          "course": "BTech AIML",
+          "semester": 3
+        },
+        {
+          "name": "Software Testing",
+          "code": "ST",
+          "course": "BTech AIML",
+          "semester": 7
+        },
+        {
+          "name": "Lab - Algorithm Analysis and Design",
+          "code": "LAB_AAD",
+          "course": "BTech AIML",
+          "semester": 3
+        },
+        {
+          "name": "Lab - Software Testing",
+          "code": "LAB_ST",
+          "course": "BTech AIML",
+          "semester": 7
+        }
+      ]
+    },
+    {
+      "name": "Mr. Keshav Gupta",
+      "username": "keshav.gupta",
+      "email": "keshav.gupta@imaginxp.com",
+      "phone": "+91-9876543214",
+      "departments": ["BTech AIML", "BCA FSD", "BTech FSD"],
+      "subjects": [
+        {
+          "name": "Data Mining and Prediction by Machines",
+          "code": "DMPM",
+          "course": "BTech AIML",
+          "semester": 5
+        },
+        {
+          "name": "Theory of Automation",
+          "code": "TOA",
+          "course": "BCA FSD",
+          "semester": 3
+        },
+        {
+          "name": "Advance Java",
+          "code": "AJ",
+          "course": "BTech FSD",
+          "semester": 5
+        }
+      ]
+    },
+    {
+      "name": "Ms. Devanshi Vaidya",
+      "username": "devanshi.vaidya",
+      "email": "devanshi.vaidya@imaginxp.com",
+      "phone": "+91-9876543215",
+      "departments": ["BTech AIML", "BCA FSD"],
+      "subjects": [
+        {
+          "name": "Data and Visual Analytics in AI",
+          "code": "DVAAI",
+          "course": "BTech AIML",
+          "semester": 5
+        },
+        {
+          "name": "Lab - Data and Visual Analytics in AI",
+          "code": "LAB_DVAAI",
+          "course": "BTech AIML",
+          "semester": 5
+        }
+      ]
+    },
+    {
+      "name": "Ms. Kajal Panwar",
+      "username": "kajal.panwar",
+      "email": "kajal.panwar@imaginxp.com",
+      "phone": "+91-9876543216",
+      "departments": ["BTech AIML", "BCA FSD"],
+      "subjects": [
+        {
+          "name": "Natural Language Processing (NLP) and Text Analysis",
+          "code": "NLPTA",
+          "course": "BTech AIML",
+          "semester": 5
+        },
+        {
+          "name": "Lab - Natural Language Processing",
+          "code": "LAB_NLP",
+          "course": "BTech AIML",
+          "semester": 5
+        }
+      ]
+    },
+    {
+      "name": "Mr. Kartik Tyagi",
+      "username": "kartik.tyagi",
+      "email": "kartik.tyagi@imaginxp.com",
+      "phone": "+91-9876543217",
+      "departments": ["BTech AIML", "BDes", "BBA DM"],
+      "subjects": [
+        {
+          "name": "Human Computer Interaction",
+          "code": "HCI",
+          "course": "BTech AIML",
+          "semester": 7
+        },
+        {
+          "name": "Innovation Management",
+          "code": "IM",
+          "course": "BDes",
+          "semester": 5
+        }
+      ]
+    },
+    {
+      "name": "Dr. Rahul Tripathi",
+      "username": "rahul.tripathi",
+      "email": "rahul.tripathy@imaginxp.com",
+      "phone": "+91-9876543218",
+      "departments": ["BBA DM", "BTech AIML"],
+      "subjects": [
+        {
+          "name": "Constitutional Values and Fundamental Rights & Duties",
+          "code": "CVAFRD",
+          "course": "BTech AIML",
+          "semester": 3
+        },
+        {
+          "name": "Principles of Management",
+          "code": "POM",
+          "course": "BBA DM",
+          "semester": 1
+        }
+      ]
+    },
+    {
+      "name": "Mr. Ashwani Kumar",
+      "username": "ashwani.kumar",
+      "email": "ashwani.kumar@imaginxp.com",
+      "phone": "+91-9876543219",
+      "departments": ["BTech AIML"],
+      "subjects": [
+        {
+          "name": "Theory of Computation",
+          "code": "TOC",
+          "course": "BTech AIML",
+          "semester": 3
+        }
+      ]
+    },
+    {
+      "name": "Mr. Srish",
+      "username": "srish",
+      "email": "srish@imaginxp.com",
+      "phone": "+91-9876543220",
+      "departments": ["BTech AIML"],
+      "subjects": [
+        {
+          "name": "Discrete Mathematics",
+          "code": "DM",
+          "course": "BTech AIML",
+          "semester": 3
+        }
+      ]
+    },
+    {
+      "name": "Mr. Rupam Sarmah",
+      "username": "rupam.sarmah",
+      "email": "rupam.sarmah@imaginxp.com",
+      "phone": "+91-9876543221",
+      "departments": ["BTech AIML"],
+      "subjects": [
+        {
+          "name": "System Design",
+          "code": "SD",
+          "course": "BTech AIML",
+          "semester": 5
+        }
+      ]
+    }
+  ]
+}

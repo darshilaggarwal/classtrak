@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import apiService from '../../services/api';
+import { authAPI } from '../../services/api';
 import { Shield, Mail, ArrowRight, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
@@ -62,7 +62,7 @@ const AdminLoginPage = () => {
     try {
       console.log('📧 Requesting OTP for:', formData.email);
       
-      const response = await apiService.auth.adminRequestOTP(formData.email);
+      const response = await authAPI.admin.requestOTP(formData.email);
 
       console.log('📡 OTP request response:', response);
 
@@ -96,7 +96,7 @@ const AdminLoginPage = () => {
     try {
       console.log('🔍 Admin login attempt:', { email: formData.email, otp: formData.otp });
       
-      const response = await apiService.auth.adminLogin(formData.email, formData.otp);
+      const response = await authAPI.admin.login(formData.email, formData.otp);
 
       console.log('📡 Admin login response:', response);
 

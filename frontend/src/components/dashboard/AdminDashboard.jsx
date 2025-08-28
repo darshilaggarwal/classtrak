@@ -24,6 +24,7 @@ import DataImportModal from '../admin/DataImportModal';
 import AddStudentModal from '../admin/AddStudentModal';
 import AddFacultyModal from '../admin/AddFacultyModal';
 import TimetableManagement from './TimetableManagement';
+import ConfirmationDialog from '../ui/ConfirmationDialog';
 import { downloadAttendancePDF, downloadAttendanceCSV } from '../../utils/pdfGenerator';
 
 const AdminDashboard = () => {
@@ -35,11 +36,54 @@ const AdminDashboard = () => {
   const [importType, setImportType] = useState('students');
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showAddFacultyModal, setShowAddFacultyModal] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteItem, setDeleteItem] = useState(null);
   const user = getUserInfo();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleDeleteConfirmation = (item) => {
+    setDeleteItem(item);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteItem) return;
+    
+    try {
+      if (deleteItem.type === 'teacher') {
+        const response = await adminAPI.deleteTeacher(deleteItem.id);
+        if (response.success) {
+          toast.success('Faculty member deleted successfully');
+          // Refresh the teachers list
+          if (activeTab === 'teachers') {
+            setActiveTab('teachers');
+          }
+        } else {
+          toast.error(response.message || 'Failed to delete faculty member');
+        }
+      } else if (deleteItem.type === 'student') {
+        const response = await adminAPI.deleteStudent(deleteItem.id);
+        if (response.success) {
+          toast.success('Student deleted successfully');
+          // Refresh the students list
+          if (activeTab === 'students') {
+            setActiveTab('students');
+          }
+        } else {
+          toast.error(response.message || 'Failed to delete student');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete item');
+    } finally {
+      setDeleteItem(null);
+      setShowDeleteConfirmation(false);
+    }
   };
 
   const navigationItems = [
@@ -67,10 +111,11 @@ const AdminDashboard = () => {
         case 'teachers':
           return <TeachersTab 
             onImportClick={() => {
-              setImportType('teachers');
-              setShowImportModal(true);
+            setImportType('teachers');
+            setShowImportModal(true);
             }}
             onAddClick={() => setShowAddFacultyModal(true)}
+            onDeleteClick={handleDeleteConfirmation}
           />;
         case 'students':
           return <StudentsTab 
@@ -79,6 +124,7 @@ const AdminDashboard = () => {
               setShowImportModal(true);
             }}
             onAddClick={() => setShowAddStudentModal(true)}
+            onDeleteClick={handleDeleteConfirmation}
           />;
         case 'timetable':
           return <TimetableManagement />;
@@ -197,7 +243,7 @@ const AdminDashboard = () => {
                 </button>
                 <div className="ml-2 lg:ml-0">
                   <h1 className="text-xl font-light text-gray-800 tracking-wide">
-                    {navigationItems.find(item => item.id === activeTab)?.label}
+                  {navigationItems.find(item => item.id === activeTab)?.label}
                   </h1>
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                     {activeTab === 'overview' && 'Dashboard Overview'}
@@ -260,6 +306,21 @@ const AdminDashboard = () => {
             setActiveTab('teachers');
           }
         }}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false);
+          setDeleteItem(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title={deleteItem?.type === 'teacher' ? 'Delete Faculty Member' : 'Delete Student'}
+        message={`Are you sure you want to delete ${deleteItem?.name}? This action cannot be undone and will permanently remove all associated data.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
       />
     </div>
   );
@@ -460,8 +521,8 @@ const DepartmentsTab = () => {
 
   // Show batches view
   if (showBatches && selectedDepartment) {
-    return (
-      <div>
+  return (
+    <div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <button
@@ -479,14 +540,14 @@ const DepartmentsTab = () => {
               <p className="text-gray-600 mt-1">All batches running under this program</p>
             </div>
           </div>
-        </div>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Batch Name
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -986,9 +1047,12 @@ const SubjectsTab = () => {
   );
 };
 
-const TeachersTab = ({ onImportClick, onAddClick }) => {
+const TeachersTab = ({ onImportClick, onAddClick, onDeleteClick }) => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingTeacher, setDeletingTeacher] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     fetchTeachers();
@@ -1009,6 +1073,24 @@ const TeachersTab = ({ onImportClick, onAddClick }) => {
     }
   };
 
+  const handleDeleteTeacher = (teacherId, teacherName) => {
+    onDeleteClick({
+      type: 'teacher',
+      id: teacherId,
+      name: teacherName
+    });
+  };
+
+  const handleTeacherClick = (teacher) => {
+    setSelectedTeacher(teacher);
+    setShowProfile(true);
+  };
+
+  const handleBackToList = () => {
+    setShowProfile(false);
+    setSelectedTeacher(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1017,17 +1099,200 @@ const TeachersTab = ({ onImportClick, onAddClick }) => {
     );
   }
 
+  // Show faculty profile view
+  if (showProfile && selectedTeacher) {
+  return (
+    <div>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleBackToList}
+              className="p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all duration-200 shadow-sm"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div>
+              <h2 className="text-4xl font-extrabold bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-800 bg-clip-text text-transparent tracking-tight">
+                Faculty Profile
+              </h2>
+              <p className="text-gray-600 mt-2 text-lg font-medium">Comprehensive details for {selectedTeacher.name}</p>
+        </div>
+          </div>
+          <button
+            onClick={() => handleDeleteTeacher(selectedTeacher._id, selectedTeacher.name)}
+            disabled={deletingTeacher === selectedTeacher._id}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            {deletingTeacher === selectedTeacher._id ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete Faculty
+              </>
+            )}
+          </button>
+      </div>
+
+        {/* Faculty Profile Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-8">
+                        {/* Header */}
+            <div className="flex items-center space-x-8 mb-10">
+              <div className="flex-1">
+                <h3 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">
+                  {selectedTeacher.name}
+                </h3>
+                <p className="text-xl text-gray-500 mb-4 font-medium">@{selectedTeacher.username}</p>
+                <div className="flex items-center space-x-4">
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${
+                    selectedTeacher.isActive 
+                      ? 'bg-green-100 text-green-800 border border-green-200' 
+                      : 'bg-red-100 text-red-800 border border-red-200'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full mr-2 ${selectedTeacher.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    {selectedTeacher.isActive ? 'Active Faculty' : 'Inactive Faculty'}
+                  </span>
+                        </div>
+                        </div>
+                      </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
+                <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    </div>
+                  Contact Information
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4 p-3 bg-white rounded-xl shadow-sm">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-gray-800 font-medium">{selectedTeacher.email}</span>
+                  </div>
+                  <div className="flex items-center space-x-4 p-3 bg-white rounded-xl shadow-sm">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
+                    <span className="text-gray-800 font-medium">{selectedTeacher.phone}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
+                <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  Assigned Courses
+                </h4>
+                    <div className="space-y-3">
+                  {selectedTeacher.courses && selectedTeacher.courses.length > 0 ? (
+                    selectedTeacher.courses.map((course, index) => (
+                      <div key={index} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-purple-100 text-purple-800 mr-3 mb-2 border border-purple-200">
+                        {course.name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6">
+                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      <p className="text-gray-500 font-medium">No courses assigned</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Subjects and Batches */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
+              <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                Teaching Assignments
+              </h4>
+              <div className="space-y-4">
+                {selectedTeacher.subjects && selectedTeacher.subjects.length > 0 ? (
+                  selectedTeacher.subjects.map((subject, index) => (
+                    <div key={index} className="border-l-4 border-indigo-500 pl-6 py-6 bg-white rounded-2xl shadow-sm mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h5 className="text-xl font-bold text-gray-900">{subject.name}</h5>
+                        <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          Semester {subject.semester}
+                              </span>
+                            </div>
+                      <p className="text-gray-600 mb-4 text-lg font-medium">{subject.department?.name}</p>
+                            {subject.batches && subject.batches.length > 0 ? (
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Teaching Batches:</p>
+                          <div className="flex flex-wrap gap-3">
+                                {subject.batches.map((batch, batchIndex) => (
+                              <span key={batchIndex} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                                    {batch.name}
+                                  </span>
+                                ))}
+                          </div>
+                              </div>
+                            ) : (
+                        <div className="text-center py-4">
+                          <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                          </svg>
+                          <p className="text-gray-500 font-medium">No batches assigned for this subject</p>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                  <div className="text-center py-12">
+                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-gray-500 text-lg font-medium">No subjects assigned to this faculty member</p>
+                  </div>
+                      )}
+                    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show clean faculty list view
   return (
     <div>
       <div className="flex justify-end mb-6">
         <div className="flex space-x-3">
-                      <Button
-              onClick={onImportClick}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Import Faculty (Structured)</span>
-            </Button>
+          <Button
+            onClick={onImportClick}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Import Faculty</span>
+          </Button>
           <Button
             onClick={onAddClick}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
@@ -1039,126 +1304,79 @@ const TeachersTab = ({ onImportClick, onAddClick }) => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Faculty
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Courses & Batches
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Courses
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
               {teachers.map((teacher) => (
-                <tr key={teacher._id} className="hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 hover:shadow-sm">
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-12 w-12">
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
-                          <span className="text-white font-semibold text-sm">
-                            {teacher.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {teacher.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          @{teacher.username}
-                        </div>
-                      </div>
+                <div 
+                  key={teacher._id} 
+                  className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-indigo-200 transition-all duration-300 cursor-pointer transform hover:scale-105"
+                  onClick={() => handleTeacherClick(teacher)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-gray-900 truncate">
+                      {teacher.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 truncate">
+                      @{teacher.username}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                        teacher.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${teacher.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        {teacher.isActive ? 'Active' : 'Inactive'}
+                      </span>
                     </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-gray-900">{teacher.email}</div>
-                      <div className="text-sm text-gray-500">{teacher.phone}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-sm text-gray-900">
-                    <div className="space-y-3">
-                      {teacher.subjects && teacher.subjects.length > 0 ? (
-                        teacher.subjects.map((subject, index) => (
-                          <div key={index} className="border-l-2 border-green-200 pl-3">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
-                                {subject.name}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {subject.department?.name} (Sem {subject.semester})
-                              </span>
-                            </div>
-                            {subject.batches && subject.batches.length > 0 ? (
-                              <div className="ml-2">
-                                <span className="text-xs text-gray-400">Batches: </span>
-                                {subject.batches.map((batch, batchIndex) => (
-                                  <span key={batchIndex} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mr-1">
-                                    {batch.name}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="ml-2">
-                                <span className="text-xs text-gray-400">No batches assigned</span>
-                              </div>
-                            )}
-                          </div>
-                        ))
+                  </div>
+                  
+                  <div className="mt-4 flex justify-end space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTeacherClick(teacher);
+                      }}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      View Profile
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTeacher(teacher._id, teacher.name);
+                      }}
+                      disabled={deletingTeacher === teacher._id}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-lg text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      {deletingTeacher === teacher._id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600 mr-1"></div>
+                          Deleting...
+                        </>
                       ) : (
-                        <span className="text-gray-500 text-sm">No subjects assigned</span>
+                        <>
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
+                        </>
                       )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-sm text-gray-900">
-                    <div className="flex flex-wrap gap-2">
-                      {teacher.courses && teacher.courses.length > 0 ? (
-                        teacher.courses.slice(0, 3).map((course, index) => (
-                          <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            {course.name}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-500 text-sm">No course assigned</span>
-                      )}
-                      {teacher.courses && teacher.courses.length > 3 && (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                          +{teacher.courses.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      teacher.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {teacher.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                </tr>
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
         </div>
       </div>
     </div>
   );
 };
 
-const StudentsTab = ({ onImportClick, onAddClick }) => {
+const StudentsTab = ({ onImportClick, onAddClick, onDeleteClick }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1170,6 +1388,7 @@ const StudentsTab = ({ onImportClick, onAddClick }) => {
   const [selectedBatch, setSelectedBatch] = useState('');
   const [departments, setDepartments] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [deletingStudent, setDeletingStudent] = useState(null);
 
   useEffect(() => {
     fetchStudents();
@@ -1244,10 +1463,17 @@ const StudentsTab = ({ onImportClick, onAddClick }) => {
     setCurrentPage(1);
   };
 
+  const handleDeleteStudent = (studentId, studentName) => {
+    onDeleteClick({
+      type: 'student',
+      id: studentId,
+      name: studentName
+    });
+  };
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Student Management</h2>
+      <div className="flex justify-end items-center mb-6">
         <div className="flex space-x-3">
           <Button
             onClick={onImportClick}
@@ -1358,6 +1584,9 @@ const StudentsTab = ({ onImportClick, onAddClick }) => {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -1414,6 +1643,27 @@ const StudentsTab = ({ onImportClick, onAddClick }) => {
                         }`}>
                           {student.isActive ? 'Active' : 'Inactive'}
                         </span>
+                      </td>
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <button
+                          onClick={() => handleDeleteStudent(student._id, student.name)}
+                          disabled={deletingStudent === student._id}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          {deletingStudent === student._id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600 mr-1"></div>
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </>
+                          )}
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1778,58 +2028,7 @@ const AttendanceTab = () => {
         </div>
       </div>
 
-      {/* Overview Cards */}
-      {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Monthly Classes</p>
-                <p className="text-2xl font-bold text-gray-900">{overview.monthlyAttendance}</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Weekly Classes</p>
-                <p className="text-2xl font-bold text-gray-900">{overview.weeklyAttendance}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Students</p>
-                <p className="text-2xl font-bold text-gray-900">{overview.totalStudents}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg. Students/Class</p>
-                <p className="text-2xl font-bold text-gray-900">{overview.averageAttendance}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-6">

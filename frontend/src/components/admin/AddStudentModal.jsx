@@ -108,6 +108,10 @@ const AddStudentModal = ({ isOpen, onClose, onSuccess }) => {
       newErrors.year = 'Year is required';
     }
 
+    if (!formData.semester) {
+      newErrors.semester = 'Semester is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -129,7 +133,8 @@ const AddStudentModal = ({ isOpen, onClose, onSuccess }) => {
         phone: formData.phone,
         rno: formData.rno,
         course: formData.course,
-        year: parseInt(formData.year)
+        year: parseInt(formData.year),
+        semester: parseInt(formData.semester)
       };
 
       const response = await adminAPI.createStudent(studentData);
@@ -305,20 +310,26 @@ const AddStudentModal = ({ isOpen, onClose, onSuccess }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Semester
+                Semester *
               </label>
               <select
                 name="semester"
                 value={formData.semester}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 ${
+                  errors.semester ? 'border-red-300' : 'border-gray-300'
+                }`}
               >
+                <option value="">Select Semester</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                   <option key={sem} value={sem}>
                     Semester {sem}
                   </option>
                 ))}
               </select>
+              {errors.semester && (
+                <p className="mt-1 text-sm text-red-600">{errors.semester}</p>
+              )}
             </div>
           </div>
 

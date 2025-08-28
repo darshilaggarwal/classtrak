@@ -789,13 +789,13 @@ const adminController = {
 
   createStudent: async (req, res) => {
     try {
-      const { name, email, rno, phone, course, year } = req.body;
+      const { name, email, rno, phone, course, year, semester } = req.body;
       
       // Validate required fields
-      if (!name || !email || !rno || !phone || !course || !year) {
+      if (!name || !email || !rno || !phone || !course || !year || !semester) {
         return res.status(400).json({
           success: false,
-          message: 'Name, email, roll number, phone, course, and year are required'
+          message: 'Name, email, roll number, phone, course, year, and semester are required'
         });
       }
 
@@ -825,18 +825,42 @@ const adminController = {
         await department.save();
       }
 
-      // Find or create the batch
-      const batchName = `${course} ${year}`;
+      // Determine the correct batch name based on course, semester, and year
+      let batchName;
+      let endYear;
+      
+      if (course === 'BTech AIML') {
+        endYear = year + 4;
+        batchName = `BTech AIML ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${year}-${String(endYear).slice(-2)})`;
+      } else if (course === 'BTech FSD') {
+        endYear = year + 4;
+        batchName = `BTech FSD ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${year}-${String(endYear).slice(-2)})`;
+      } else if (course === 'BCA FSD') {
+        endYear = year + 3;
+        batchName = `BCA FSD ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${year}-${String(endYear).slice(-2)})`;
+      } else if (course === 'BBA DM') {
+        endYear = year + 3;
+        if (semester === 5) {
+          batchName = `BBA DM 5th Sem C (${year}-${String(endYear).slice(-2)})`;
+        } else {
+          batchName = `BBA DM ${semester === 1 ? '1st' : semester === 3 ? '3rd' : `${semester}th`} Sem (${year}-${String(endYear).slice(-2)})`;
+        }
+      } else if (course === 'BDes') {
+        endYear = year + 3;
+        batchName = `BDes ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${year}-${String(endYear).slice(-2)})`;
+      } else {
+        // Fallback for other courses
+        endYear = year + 4;
+        batchName = `${course} ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${year}-${String(endYear).slice(-2)})`;
+      }
+
+      // Find the existing batch
       let batch = await Batch.findOne({ name: batchName });
       if (!batch) {
-        batch = new Batch({
-          name: batchName,
-          department: department._id,
-          year: year,
-          description: `${course} batch for year ${year}`,
-          isActive: true
+        return res.status(400).json({
+          success: false,
+          message: `Batch "${batchName}" does not exist. Please create the batch first or use an existing batch.`
         });
-        await batch.save();
       }
 
       // Create the student
@@ -846,10 +870,10 @@ const adminController = {
         rno,
         phone,
         courseName: course,
-        courseDuration: '4 years', // Default duration
+        courseDuration: course.includes('BTech') ? '4 years' : '3 years',
         department: department._id,
         batch: batch._id,
-        semester: 1, // Default to first semester
+        semester: semester,
         isFirstLogin: true,
         emailVerified: false
       });

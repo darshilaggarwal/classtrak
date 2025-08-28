@@ -2024,8 +2024,9 @@ const importTeachers = async (req, res) => {
                 }
               }
               
-              // Store subject ID for teacher mapping
-              subjectMap.set(subjectName, subject._id);
+              // Store subject ID for teacher mapping with unique key
+              const uniqueKey = `${subjectName}_${courseName}_${semester}`;
+              subjectMap.set(uniqueKey, subject._id);
             } catch (error) {
               console.error(`Failed to create subject: ${subjectName}`, error);
             }
@@ -2072,7 +2073,7 @@ const importTeachers = async (req, res) => {
 
         // Map subjects and extract courses from subjects
         let departmentIds = new Set();
-        let subjectIds = [];
+        let subjectIds = new Set(); // Use Set to prevent duplicates
 
         if (teacherData.subjects && Array.isArray(teacherData.subjects)) {
           for (const subjectData of teacherData.subjects) {
@@ -2081,9 +2082,10 @@ const importTeachers = async (req, res) => {
               const subjectName = subjectData.name;
               const courseName = subjectData.course;
               
-              const subjectId = subjectMap.get(subjectName);
+              const uniqueKey = `${subjectName}_${courseName}_${semester}`;
+              const subjectId = subjectMap.get(uniqueKey);
               if (subjectId) {
-                subjectIds.push(subjectId);
+                subjectIds.add(subjectId.toString()); // Use add() to prevent duplicates
                 
                 // Add course to teacher's courses
                 const departmentId = departmentMap.get(courseName);
@@ -2105,7 +2107,7 @@ const importTeachers = async (req, res) => {
           username: teacherData.username,
           // password: hashedPassword, // No password initially - will be set during OTP signup
           phone: teacherData.phone || '+91-0000000000', // Default phone if not provided
-          subjects: subjectIds,
+          subjects: Array.from(subjectIds), // Convert Set back to array
           courses: Array.from(departmentIds),
           isActive: true,
           isFirstLogin: true

@@ -22,6 +22,7 @@ import { toast } from 'react-hot-toast';
 import { adminAPI } from '../../services/api';
 import DataImportModal from '../admin/DataImportModal';
 import AddStudentModal from '../admin/AddStudentModal';
+import AddFacultyModal from '../admin/AddFacultyModal';
 import TimetableManagement from './TimetableManagement';
 import { downloadAttendancePDF, downloadAttendanceCSV } from '../../utils/pdfGenerator';
 
@@ -33,6 +34,7 @@ const AdminDashboard = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importType, setImportType] = useState('students');
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showAddFacultyModal, setShowAddFacultyModal] = useState(false);
   const user = getUserInfo();
 
   const handleLogout = () => {
@@ -42,10 +44,10 @@ const AdminDashboard = () => {
 
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: Home, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { id: 'departments', label: 'Courses', icon: GraduationCap, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+    { id: 'departments', label: 'Programs', icon: GraduationCap, color: 'text-purple-600', bgColor: 'bg-purple-50' },
     { id: 'batches', label: 'Batches', icon: Users, color: 'text-green-600', bgColor: 'bg-green-50' },
-    { id: 'subjects', label: 'Subjects', icon: BookOpen, color: 'text-orange-600', bgColor: 'bg-orange-50' },
-    { id: 'teachers', label: 'Teachers', icon: Users, color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
+    { id: 'subjects', label: 'Courses', icon: BookOpen, color: 'text-orange-600', bgColor: 'bg-orange-50' },
+    { id: 'teachers', label: 'Faculty', icon: Users, color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
     { id: 'students', label: 'Students', icon: Users, color: 'text-pink-600', bgColor: 'bg-pink-50' },
     { id: 'timetable', label: 'Timetable', icon: Calendar, color: 'text-red-600', bgColor: 'bg-red-50' },
     { id: 'attendance', label: 'Attendance', icon: BarChart3, color: 'text-teal-600', bgColor: 'bg-teal-50' },
@@ -63,10 +65,13 @@ const AdminDashboard = () => {
         case 'subjects':
           return <SubjectsTab />;
         case 'teachers':
-          return <TeachersTab onImportClick={() => {
-            setImportType('teachers');
-            setShowImportModal(true);
-          }} />;
+          return <TeachersTab 
+            onImportClick={() => {
+              setImportType('teachers');
+              setShowImportModal(true);
+            }}
+            onAddClick={() => setShowAddFacultyModal(true)}
+          />;
         case 'students':
           return <StudentsTab 
             onImportClick={() => {
@@ -190,14 +195,26 @@ const AdminDashboard = () => {
                 >
                   <Menu className="w-5 h-5" />
                 </button>
-                <h2 className="ml-2 lg:ml-0 text-lg font-semibold text-gray-900">
-                  {navigationItems.find(item => item.id === activeTab)?.label}
-                </h2>
+                <div className="ml-2 lg:ml-0">
+                  <h1 className="text-xl font-light text-gray-800 tracking-wide">
+                    {navigationItems.find(item => item.id === activeTab)?.label}
+                  </h1>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                    {activeTab === 'overview' && 'Dashboard Overview'}
+                    {activeTab === 'departments' && 'Academic Programs'}
+                    {activeTab === 'batches' && 'Student Batches'}
+                    {activeTab === 'subjects' && 'Course Catalog'}
+                    {activeTab === 'teachers' && 'Faculty Directory'}
+                    {activeTab === 'students' && 'Student Registry'}
+                    {activeTab === 'timetable' && 'Academic Schedule'}
+                    {activeTab === 'attendance' && 'Attendance Records'}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="hidden sm:block text-right">
                   <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500">Super Administrator</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Administrator</p>
                 </div>
               </div>
             </div>
@@ -228,6 +245,19 @@ const AdminDashboard = () => {
           if (activeTab === 'students') {
             // This will trigger a re-render of the StudentsTab
             setActiveTab('students');
+          }
+        }}
+      />
+
+      {/* Add Faculty Modal */}
+      <AddFacultyModal
+        isOpen={showAddFacultyModal}
+        onClose={() => setShowAddFacultyModal(false)}
+        onSuccess={() => {
+          // Refresh the teachers list
+          if (activeTab === 'teachers') {
+            // This will trigger a re-render of the TeachersTab
+            setActiveTab('teachers');
           }
         }}
       />
@@ -276,13 +306,13 @@ const OverviewTab = () => {
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">System Overview</h2>
-        <p className="text-gray-600">Welcome to ClassTrack Admin Dashboard</p>
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-light text-gray-800 tracking-wide mb-2">Welcome back, Administrator</h2>
+        <p className="text-gray-600 font-medium">Here's what's happening in your institution today</p>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium mb-1">Total Students</p>
@@ -295,7 +325,7 @@ const OverviewTab = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100 text-sm font-medium mb-1">Total Teachers</p>
@@ -308,7 +338,7 @@ const OverviewTab = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-purple-100 text-sm font-medium mb-1">Total Subjects</p>
@@ -321,7 +351,7 @@ const OverviewTab = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-orange-100 text-sm font-medium mb-1">Departments</p>
@@ -337,7 +367,7 @@ const OverviewTab = () => {
 
       {/* Additional Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-teal-100 text-sm font-medium mb-1">Total Batches</p>
@@ -350,7 +380,7 @@ const OverviewTab = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-pink-100 text-sm font-medium mb-1">Today's Classes</p>
@@ -369,10 +399,14 @@ const OverviewTab = () => {
 
 const DepartmentsTab = () => {
   const [departments, setDepartments] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [showBatches, setShowBatches] = useState(false);
 
   useEffect(() => {
     fetchDepartments();
+    fetchBatches();
   }, []);
 
   const fetchDepartments = async () => {
@@ -390,6 +424,32 @@ const DepartmentsTab = () => {
     }
   };
 
+  const fetchBatches = async () => {
+    try {
+      const response = await adminAPI.getBatches();
+      if (response.success) {
+        setBatches(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching batches:', error);
+    }
+  };
+
+  const handleDepartmentClick = (department) => {
+    setSelectedDepartment(department);
+    setShowBatches(true);
+  };
+
+  const handleBackToPrograms = () => {
+    setSelectedDepartment(null);
+    setShowBatches(false);
+  };
+
+  // Filter batches for selected department
+  const departmentBatches = batches.filter(batch => 
+    batch.department && batch.department._id === selectedDepartment?._id
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -398,17 +458,96 @@ const DepartmentsTab = () => {
     );
   }
 
+  // Show batches view
+  if (showBatches && selectedDepartment) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleBackToPrograms}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                {selectedDepartment.name} - Batches
+              </h2>
+              <p className="text-gray-600 mt-1">All batches running under this program</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Batch Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Students
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Year
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {departmentBatches.map((batch) => (
+                  <tr key={batch._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 hover:shadow-sm">
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-sm">
+                            <span className="text-white font-semibold text-xs">
+                              {batch.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {batch.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {batch.totalStudents || 0}
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">
+                      {batch.year || 'N/A'}
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
+                        batch.isActive 
+                          ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200' 
+                          : 'bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border border-red-200'
+                      }`}>
+                        {batch.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show programs view
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Course Management</h2>
-        {/* <Button
-          onClick={() => {}}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          Add Course
-        </Button> */}
-      </div>
+
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -416,7 +555,7 @@ const DepartmentsTab = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Course
+                  Program
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Code
@@ -431,7 +570,7 @@ const DepartmentsTab = () => {
                   Students
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Teachers
+                  Faculty
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Status
@@ -440,7 +579,11 @@ const DepartmentsTab = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {departments.map((dept) => (
-                <tr key={dept._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 hover:shadow-sm">
+                <tr 
+                  key={dept._id} 
+                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 hover:shadow-sm cursor-pointer"
+                  onClick={() => handleDepartmentClick(dept)}
+                >
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-12 w-12">
@@ -540,15 +683,7 @@ const BatchesTab = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Batch Management</h2>
-        <Button
-          onClick={() => {}}
-          className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          Add Batch
-        </Button>
-      </div>
+
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -650,8 +785,8 @@ const SubjectsTab = () => {
         setSubjects(response.data);
       }
     } catch (error) {
-      console.error('Error fetching subjects:', error);
-      toast.error('Failed to fetch subjects');
+      console.error('Error fetching courses:', error);
+      toast.error('Failed to fetch courses');
     } finally {
       setLoading(false);
     }
@@ -671,7 +806,7 @@ const SubjectsTab = () => {
   const filterSubjects = () => {
     let filtered = [...subjects];
 
-    // Search by subject name
+    // Search by course name
     if (searchTerm) {
       filtered = filtered.filter(subject => 
         subject.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -709,15 +844,7 @@ const SubjectsTab = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Subject Management</h2>
-        <Button
-          onClick={() => {}}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          Add Subject
-        </Button>
-      </div>
+
 
       {/* Search and Filters */}
       <div className="mb-6 p-6 bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
@@ -726,7 +853,7 @@ const SubjectsTab = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search subjects by name..."
+                placeholder="Search courses by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
@@ -776,7 +903,7 @@ const SubjectsTab = () => {
         </div>
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Showing <span className="font-semibold text-gray-900">{filteredSubjects.length}</span> of <span className="font-semibold text-gray-900">{subjects.length}</span> subjects
+            Showing <span className="font-semibold text-gray-900">{filteredSubjects.length}</span> of <span className="font-semibold text-gray-900">{subjects.length}</span> courses
           </div>
           <div className="text-sm text-gray-500">
             {searchTerm && `Searching for: "${searchTerm}"`}
@@ -792,7 +919,7 @@ const SubjectsTab = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Subject Name
+                  Course Name
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Code
@@ -859,7 +986,7 @@ const SubjectsTab = () => {
   );
 };
 
-const TeachersTab = ({ onImportClick }) => {
+const TeachersTab = ({ onImportClick, onAddClick }) => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -875,8 +1002,8 @@ const TeachersTab = ({ onImportClick }) => {
         setTeachers(response.data);
       }
     } catch (error) {
-      console.error('Error fetching teachers:', error);
-      toast.error('Failed to fetch teachers');
+      console.error('Error fetching faculty:', error);
+      toast.error('Failed to fetch faculty');
     } finally {
       setLoading(false);
     }
@@ -892,21 +1019,20 @@ const TeachersTab = ({ onImportClick }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Teacher Management</h2>
+      <div className="flex justify-end mb-6">
         <div className="flex space-x-3">
                       <Button
               onClick={onImportClick}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
             >
               <Upload className="w-4 h-4" />
-              <span>Import Teachers (Structured)</span>
+              <span>Import Faculty (Structured)</span>
             </Button>
           <Button
-            onClick={() => {}}
+            onClick={onAddClick}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
           >
-            Add Teacher
+            Add Faculty
           </Button>
         </div>
       </div>
@@ -917,13 +1043,13 @@ const TeachersTab = ({ onImportClick }) => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Teacher
+                  Faculty
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Contact
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Subjects & Batches
+                  Courses & Batches
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Courses
@@ -1553,7 +1679,7 @@ const AttendanceTab = () => {
       
       // Dismiss loading toast and show success
       toast.dismiss(loadingToast);
-      toast.success('Report downloaded successfully! (CSV format - PDF requires dependencies)');
+      toast.success('Report downloaded successfully!');
     } catch (error) {
       console.error('PDF download error:', error);
       toast.error('Failed to download report. Please try again.');

@@ -579,18 +579,83 @@ const adminController = {
 
   createTeacher: async (req, res) => {
     try {
-      const { name, email, username, phone, subjects, course, password } = req.body;
+      const { name, email, username, phone, subjects } = req.body;
       
+      // Validate required fields
+      if (!name || !email || !username || !phone) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name, email, username, and phone are required'
+        });
+      }
+
+      // Check if teacher already exists
+      const existingTeacher = await Teacher.findOne({ 
+        $or: [{ email: email }, { username: username.toLowerCase() }] 
+      });
+
+      if (existingTeacher) {
+        return res.status(400).json({
+          success: false,
+          message: 'Teacher with this email or username already exists'
+        });
+      }
+
+      // Process subjects and create/assign them
+      let subjectIds = [];
+      let departmentIds = new Set();
+
+      if (subjects && Array.isArray(subjects)) {
+        for (const subjectData of subjects) {
+          if (subjectData.name && subjectData.course && subjectData.semester) {
+            // Find or create the department
+            let department = await Department.findOne({ name: subjectData.course });
+            if (!department) {
+              department = new Department({
+                name: subjectData.course,
+                code: subjectData.course.replace(/\s+/g, '_').toUpperCase(),
+                description: `${subjectData.course} Department`,
+                isActive: true
+              });
+              await department.save();
+            }
+
+            // Find or create the subject
+            let subject = await Subject.findOne({
+              name: subjectData.name,
+              department: department._id,
+              semester: subjectData.semester
+            });
+
+            if (!subject) {
+              subject = new Subject({
+                name: subjectData.name,
+                code: `${subjectData.name.replace(/\s+/g, '_').toUpperCase()}_${subjectData.semester}`,
+                description: `${subjectData.name} for ${subjectData.course} Semester ${subjectData.semester}`,
+                department: department._id,
+                semester: subjectData.semester,
+                credits: 3,
+                isActive: true
+              });
+              await subject.save();
+            }
+
+            subjectIds.push(subject._id);
+            departmentIds.add(department._id);
+          }
+        }
+      }
+
+      // Create the teacher
       const teacher = new Teacher({
         name,
         email,
         username: username.toLowerCase(),
         phone,
-        subjects,
-        course,
-        password,
-        isFirstLogin: false,
-        emailVerified: true
+        subjects: subjectIds,
+        courses: Array.from(departmentIds),
+        isFirstLogin: true,
+        emailVerified: false
       });
 
       await teacher.save();
@@ -724,18 +789,16 @@ const adminController = {
 
   createStudent: async (req, res) => {
     try {
-      const { 
-        name, 
-        email, 
-        rno, 
-        phone, 
-        courseName, 
-        courseDuration, 
-        batch, 
-        department, 
-        semester 
-      } = req.body;
+      const { name, email, rno, phone, course, year } = req.body;
       
+      // Validate required fields
+      if (!name || !email || !rno || !phone || !course || !year) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name, email, roll number, phone, course, and year are required'
+        });
+      }
+
       // Check if student with same email or roll number already exists
       const existingStudent = await Student.findOne({
         $or: [{ email }, { rno }]
@@ -746,20 +809,47 @@ const adminController = {
           success: false,
           message: existingStudent.email === email 
             ? 'Student with this email already exists' 
-            : 'Student with this enrollment number already exists'
+            : 'Student with this roll number already exists'
         });
       }
 
+      // Find or create the department
+      let department = await Department.findOne({ name: course });
+      if (!department) {
+        department = new Department({
+          name: course,
+          code: course.replace(/\s+/g, '_').toUpperCase(),
+          description: `${course} Department`,
+          isActive: true
+        });
+        await department.save();
+      }
+
+      // Find or create the batch
+      const batchName = `${course} ${year}`;
+      let batch = await Batch.findOne({ name: batchName });
+      if (!batch) {
+        batch = new Batch({
+          name: batchName,
+          department: department._id,
+          year: year,
+          description: `${course} batch for year ${year}`,
+          isActive: true
+        });
+        await batch.save();
+      }
+
+      // Create the student
       const student = new Student({
         name,
         email,
         rno,
         phone,
-        courseName,
-        courseDuration,
-        batch,
-        department,
-        semester,
+        courseName: course,
+        courseDuration: '4 years', // Default duration
+        department: department._id,
+        batch: batch._id,
+        semester: 1, // Default to first semester
         isFirstLogin: true,
         emailVerified: false
       });

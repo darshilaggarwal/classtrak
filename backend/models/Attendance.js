@@ -49,6 +49,19 @@ const attendanceSchema = new mongoose.Schema({
     required: true
   },
   records: [attendanceRecordSchema],
+  // Substitution fields
+  isSubstitution: {
+    type: Boolean,
+    default: false
+  },
+  originalTeacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Teacher'
+  },
+  substituteTeacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Teacher'
+  },
   month: {
     type: Number,
     min: 1,

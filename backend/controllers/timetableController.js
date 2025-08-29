@@ -174,10 +174,10 @@ const timetableController = {
         .populate('timeSlots.teacher', 'name');
 
       if (!timetable) {
-        return res.json({ success: true, timetable: null });
+        return res.json({ success: true, data: null });
       }
 
-      res.json({ success: true, timetable });
+      res.json({ success: true, data: timetable });
     } catch (error) {
       console.error('Error fetching timetable:', error);
       res.status(500).json({ success: false, message: 'Failed to fetch timetable' });
@@ -192,6 +192,17 @@ const timetableController = {
       
       const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
       
+      // Get approved substitutions for this teacher
+      const Substitution = require('../models/Substitution');
+      const approvedSubstitutions = await Substitution.find({
+        $or: [
+          { originalTeacher: teacherId, status: 'approved' },
+          { substituteTeacher: teacherId, status: 'approved' }
+        ],
+        date: new Date(date)
+      }).populate('subject batch originalTeacher substituteTeacher');
+
+      // Get regular timetable classes
       const timetables = await Timetable.find({
         dayOfWeek,
         'timeSlots.teacher': teacherId,
@@ -208,12 +219,20 @@ const timetableController = {
         .populate('timeSlots.subject', 'name code')
         .populate('timeSlots.teacher', 'name');
 
-      // Extract only the teacher's time slots
+      // Extract teacher's time slots
       const teacherSchedule = [];
       
       timetables.forEach(timetable => {
         timetable.timeSlots.forEach(slot => {
           if (slot.teacher && slot.teacher._id.toString() === teacherId) {
+            // Check if this class has been substituted out
+            const isSubstitutedOut = approvedSubstitutions.some(sub => 
+              sub.originalTeacher._id.toString() === teacherId &&
+              sub.startTime === slot.startTime &&
+              sub.subject._id.toString() === slot.subject._id.toString()
+            );
+
+            // Include all classes, but mark substituted ones
             teacherSchedule.push({
               startTime: slot.startTime,
               endTime: slot.endTime,
@@ -221,10 +240,33 @@ const timetableController = {
               batch: timetable.batch,
               roomNumber: slot.roomNumber,
               timetableId: timetable._id,
-              slotId: slot._id
+              slotId: slot._id,
+              isRegularClass: true,
+              isSubstitutedOut: isSubstitutedOut,
+              substitutionInfo: isSubstitutedOut ? approvedSubstitutions.find(sub => 
+                sub.originalTeacher._id.toString() === teacherId &&
+                sub.startTime === slot.startTime &&
+                sub.subject._id.toString() === slot.subject._id.toString()
+              ) : null
             });
           }
         });
+      });
+
+      // Add substitution classes (classes this teacher is substituting for)
+      approvedSubstitutions.forEach(sub => {
+        if (sub.substituteTeacher._id.toString() === teacherId) {
+          teacherSchedule.push({
+            startTime: sub.startTime,
+            endTime: sub.endTime,
+            subject: sub.subject,
+            batch: sub.batch,
+            roomNumber: sub.roomNumber || 'TBD',
+            substitutionId: sub._id,
+            originalTeacher: sub.originalTeacher,
+            isSubstitutionClass: true
+          });
+        }
       });
 
       // Sort by start time

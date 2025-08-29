@@ -15,4 +15,13 @@ router.get('/batches', teacherController.getMyBatches);
 // Teacher's Subjects
 router.get('/subjects', teacherController.getMySubjects);
 
+// Teacher's Schedule
+router.get('/schedule/:teacherId', teacherController.getTeacherSchedule);
+
+// Teacher's Batches by ID
+router.get('/batches/:teacherId', teacherController.getTeacherBatches);
+
+// Teacher's Subjects by ID
+router.get('/subjects/:teacherId', teacherController.getTeacherSubjects);
+
 module.exports = router;

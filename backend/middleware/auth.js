@@ -108,9 +108,11 @@ const authenticateTeacher = async (req, res, next) => {
 };
 
 // Subject authorization middleware for teachers
-const authorizeSubject = (req, res, next) => {
+const authorizeSubject = async (req, res, next) => {
   // Get subject from request body
   const requestSubject = req.body.subject;
+  const requestDate = req.body.date;
+  const requestBatch = req.body.batch;
   
   if (!requestSubject) {
     return res.status(400).json({
@@ -127,11 +129,39 @@ const authorizeSubject = (req, res, next) => {
   
   console.log(`🔐 Subject Authorization Check:`);
   console.log(`   Request Subject: ${requestSubject}`);
+  console.log(`   Request Date: ${requestDate}`);
+  console.log(`   Request Batch: ${requestBatch}`);
   console.log(`   Teacher Subjects: ${subjectNames.join(', ')}`);
   console.log(`   Teacher: ${req.teacher.name}`);
   
   // Check if teacher can teach this subject
-  if (!subjectNames.includes(requestSubject)) {
+  const canTeachSubject = subjectNames.includes(requestSubject);
+  
+  // If teacher can't teach the subject, check for substitution rights
+  if (!canTeachSubject) {
+    if (requestDate && requestBatch) {
+      const Substitution = require('../models/Substitution');
+      const substitutionRights = await Substitution.findOne({
+        substituteTeacher: req.teacher._id,
+        date: new Date(requestDate),
+        batch: requestBatch,
+        status: 'approved'
+      }).populate('subject');
+      
+      const hasSubstitutionRights = substitutionRights && substitutionRights.subject.name === requestSubject;
+      
+      console.log(`🔄 Substitution check:`, {
+        hasSubstitutionRights,
+        substitutionSubject: substitutionRights?.subject?.name,
+        substitutionDate: substitutionRights?.date
+      });
+      
+      if (hasSubstitutionRights) {
+        console.log(`🔐 Subject Authorization: Teacher ${req.teacher.name} authorized for ${requestSubject} via substitution`);
+        return next();
+      }
+    }
+    
     return res.status(403).json({
       success: false,
       message: `Access denied. You can only mark attendance for your assigned subjects: ${subjectNames.join(', ')}`

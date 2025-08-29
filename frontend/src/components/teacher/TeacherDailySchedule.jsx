@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, BookOpen, MapPin, ChevronRight, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, Users, BookOpen, MapPin, ChevronRight, CheckCircle, RefreshCw, UserCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getAuthToken } from '../../services/api';
 
@@ -121,6 +121,36 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
     }
   };
 
+  const getSubstitutionBadge = (slot) => {
+    if (slot.isSubstitutionClass) {
+      return (
+        <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full flex items-center space-x-1">
+          <UserCheck className="w-3 h-3" />
+          <span>Substitution</span>
+        </span>
+      );
+    }
+    if (slot.isSubstitutedOut) {
+      return (
+        <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full flex items-center space-x-1">
+          <RefreshCw className="w-3 h-3" />
+          <span>Substituted Out</span>
+        </span>
+      );
+    }
+    return null;
+  };
+
+  const getSubstitutionStyles = (slot) => {
+    if (slot.isSubstitutionClass) {
+      return 'border-purple-400 bg-purple-50 shadow-lg shadow-purple-100';
+    }
+    if (slot.isSubstitutedOut) {
+      return 'border-orange-400 bg-orange-50 shadow-sm';
+    }
+    return '';
+  };
+
   const isToday = selectedDate === new Date().toISOString().split('T')[0];
 
   return (
@@ -207,6 +237,11 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
                 </h3>
                 <p className="text-blue-700">
                   {isToday ? 'Today' : dayOfWeek} • {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
+                  {schedule.filter(slot => slot.isSubstitutionClass).length > 0 && (
+                    <span className="ml-2 text-purple-600">
+                      ({schedule.filter(slot => slot.isSubstitutionClass).length} substitution{schedule.filter(slot => slot.isSubstitutionClass).length !== 1 ? 's' : ''})
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -240,11 +275,12 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
 
       {/* Status Summary */}
       {schedule.length > 0 && (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           {(() => {
             const ongoingCount = schedule.filter(slot => getCurrentTimeStatus(slot.startTime, slot.endTime, selectedDate) === 'ongoing').length;
             const upcomingCount = schedule.filter(slot => getCurrentTimeStatus(slot.startTime, slot.endTime, selectedDate) === 'upcoming').length;
             const completedCount = schedule.filter(slot => getCurrentTimeStatus(slot.startTime, slot.endTime, selectedDate) === 'completed').length;
+            const substitutionCount = schedule.filter(slot => slot.isSubstitutionClass).length;
             
             return (
               <>
@@ -283,6 +319,20 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
                     </div>
                   </div>
                 </div>
+                
+                {substitutionCount > 0 && (
+                  <div className="bg-purple-50 p-4 rounded-xl border border-purple-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <UserCheck className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-purple-700">Substitutions</p>
+                        <p className="text-xl font-bold text-purple-900">{substitutionCount}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             );
           })()}
@@ -308,9 +358,11 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
                       {schedule.map((slot, index) => {
               const status = getCurrentTimeStatus(slot.startTime, slot.endTime, selectedDate);
               const statusStyles = getStatusStyles(status);
+              const substitutionStyles = getSubstitutionStyles(slot);
+              const combinedStyles = `${statusStyles} ${substitutionStyles}`;
             
             return (
-              <div key={index} className={`border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg ${statusStyles}`}>
+              <div key={index} className={`border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg ${combinedStyles}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     {/* Time */}
@@ -323,7 +375,10 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
                           {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                         </span>
                       </div>
-                                              {getStatusBadge(status)}
+                      <div className="flex items-center space-x-2">
+                        {getStatusBadge(status)}
+                        {getSubstitutionBadge(slot)}
+                      </div>
                     </div>
 
                     {/* Subject and Batch */}
@@ -333,6 +388,16 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
                         <div>
                           <h3 className="font-semibold text-gray-900">{slot.subject?.name}</h3>
                           <p className="text-sm text-gray-600">Subject Code: {slot.subject?.code}</p>
+                          {slot.isSubstitutionClass && slot.originalTeacher && (
+                            <p className="text-xs text-purple-600 font-medium">
+                              Substituting for {slot.originalTeacher.name}
+                            </p>
+                          )}
+                          {slot.isSubstitutedOut && slot.substitutionInfo && (
+                            <p className="text-xs text-orange-600 font-medium">
+                              Substituted by {slot.substitutionInfo.substituteTeacher.name}
+                            </p>
+                          )}
                         </div>
                       </div>
                       
@@ -377,6 +442,16 @@ const TeacherDailySchedule = ({ onAttendanceClick, onAttendanceMarked }) => {
                           <div className="flex items-center space-x-2 px-6 py-3 rounded-lg font-medium bg-gray-100 text-gray-600 border border-gray-200">
                             <Users className="w-4 h-4" />
                             <span>View in History</span>
+                          </div>
+                        );
+                      }
+                      
+                      // Priority 3: For substituted out classes, show "Substituted Out" (no attendance marking allowed)
+                      if (slot.isSubstitutedOut) {
+                        return (
+                          <div className="flex items-center space-x-2 px-6 py-3 rounded-lg font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                            <RefreshCw className="w-4 h-4" />
+                            <span>Substituted Out</span>
                           </div>
                         );
                       }

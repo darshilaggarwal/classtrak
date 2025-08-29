@@ -17,5 +17,6 @@ router.get('/teacher/:teacherId/schedule', authenticateTeacher, timetableControl
 
 // Common routes
 router.get('/batch/:batchId/day/:dayOfWeek', authenticate, timetableController.getTimetableByBatchAndDay);
+router.get('/batch/:batchId/:dayOfWeek', authenticate, timetableController.getTimetableByBatchAndDay);
 
 module.exports = router;

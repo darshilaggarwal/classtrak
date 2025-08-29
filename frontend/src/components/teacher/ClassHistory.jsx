@@ -364,6 +364,12 @@ const ClassHistory = ({ onRefresh }) => {
                              <span className="text-sm font-medium text-gray-900">
                                {record.subject}
                              </span>
+                             {record.isSubstitution && (
+                               <div className="flex items-center space-x-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                 <User className="w-3 h-3" />
+                                 <span>Substitution</span>
+                               </div>
+                             )}
                            </div>
                            
                            <div className="flex items-center space-x-3">
@@ -421,6 +427,19 @@ const ClassHistory = ({ onRefresh }) => {
                   <p className="text-sm text-gray-600">
                     {selectedRecord.subject} • {selectedRecord.batch} • {formatDate(selectedRecord.date)}
                   </p>
+                  {selectedRecord.isSubstitution && (
+                    <div className="flex items-center space-x-2 mt-2">
+                      <div className="flex items-center space-x-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                        <User className="w-3 h-3" />
+                        <span>Substitution Class</span>
+                      </div>
+                      {selectedRecord.originalTeacher && (
+                        <span className="text-xs text-gray-500">
+                          Original: {selectedRecord.originalTeacher}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               <button

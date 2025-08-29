@@ -63,6 +63,7 @@ app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/teacher', require('./routes/teacher'));
 app.use('/api/timetable', require('./routes/timetable'));
+app.use('/api/substitution', require('./routes/substitution'));
 
 // Global error handler
 app.use((err, req, res, next) => {

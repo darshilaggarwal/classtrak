@@ -1783,13 +1783,20 @@ const importStudents = async (req, res) => {
       if (studentData.course) {
         // Validate course name
         if (validCourses.includes(studentData.course)) {
-          const batchName = `${studentData.course} ${studentData.year}`;
+          // Calculate semester and end year based on current year
+          const currentYear = new Date().getFullYear();
+          const yearDiff = currentYear - studentData.year;
+          const semester = Math.max(1, Math.min(8, yearDiff * 2 + 1));
+          const endYear = studentData.year + 4; // 4-year course
+          
+          // Use the existing batch naming convention
+          const batchName = `${studentData.course} ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${studentData.year}-${String(endYear).slice(-2)})`;
           
           if (!departmentMap.has(studentData.course)) {
             departmentMap.set(studentData.course, null);
           }
           if (!batchMap.has(batchName)) {
-            batchMap.set(batchName, { course: studentData.course, year: studentData.year });
+            batchMap.set(batchName, { course: studentData.course, year: studentData.year, semester, endYear });
           }
         }
       }
@@ -1907,7 +1914,12 @@ const importStudents = async (req, res) => {
         }
 
         // Get pre-created course and batch IDs
-        const batchName = `${studentData.course} ${studentData.year}`;
+        const currentYear = new Date().getFullYear();
+        const yearDiff = currentYear - studentData.year;
+        const semester = Math.max(1, Math.min(8, yearDiff * 2 + 1));
+        const endYear = studentData.year + 4; // 4-year course
+        
+        const batchName = `${studentData.course} ${semester === 1 ? '1st' : semester === 3 ? '3rd' : semester === 5 ? '5th' : semester === 7 ? '7th' : `${semester}th`} Sem (${studentData.year}-${String(endYear).slice(-2)})`;
         
         const departmentId = departmentMap.get(studentData.course);
         const batchId = batchMap.get(batchName);

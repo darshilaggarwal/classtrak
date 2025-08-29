@@ -272,6 +272,23 @@ export const attendanceAPI = {
   getSubjects: async () => {
     const response = await api.get('/attendance/teacher/subjects');
     return response.data;
+  },
+
+  getTeacherBatches: async (teacherId) => {
+    const response = await api.get(`/teacher/batches/${teacherId}`);
+    return response.data;
+  },
+
+  getTeacherSubjects: async (teacherId) => {
+    const response = await api.get(`/teacher/subjects/${teacherId}`);
+    return response.data;
+  },
+
+  getTeacherSchedule: async (teacherId, date) => {
+    const response = await api.get(`/teacher/schedule/${teacherId}`, {
+      params: { date }
+    });
+    return response.data;
   }
 };
 
@@ -437,6 +454,11 @@ export const adminAPI = {
 
   deleteTimetableForBatch: async (batchName) => {
     const response = await api.delete(`/timetable/admin/batch/${encodeURIComponent(batchName)}`);
+    return response.data;
+  },
+
+  getBatchTimetable: async (batchId, dayOfWeek) => {
+    const response = await api.get(`/timetable/batch/${batchId}/${dayOfWeek}`);
     return response.data;
   },
 

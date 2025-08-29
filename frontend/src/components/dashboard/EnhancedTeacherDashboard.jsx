@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import TeacherDailySchedule from '../teacher/TeacherDailySchedule';
 import AttendanceManager from '../teacher/AttendanceManager';
 import ClassHistory from '../teacher/ClassHistory';
+import SubstitutionManagement from '../teacher/SubstitutionManagement';
 
 const EnhancedTeacherDashboard = () => {
   const { getUserInfo, logout } = useAuth();
@@ -30,7 +31,7 @@ const EnhancedTeacherDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [statistics, setStatistics] = useState({});
   const [classHistory, setClassHistory] = useState([]);
-  const [currentView, setCurrentView] = useState('schedule'); // schedule, dashboard, attendance, history
+  const [currentView, setCurrentView] = useState('schedule'); // schedule, dashboard, attendance, history, substitution
   const [selectedBatch, setSelectedBatch] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
 
@@ -221,6 +222,17 @@ const EnhancedTeacherDashboard = () => {
             <History className="w-4 h-4 mr-2" />
             History
           </button>
+          <button
+            onClick={() => setCurrentView('substitution')}
+            className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentView === 'substitution'
+                ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-soft'
+                : 'text-neutral-600 hover:text-primary-600'
+            }`}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Substitution
+          </button>
         </div>
 
         {/* Schedule View */}
@@ -262,6 +274,11 @@ const EnhancedTeacherDashboard = () => {
         {/* History View */}
         {currentView === 'history' && (
           <ClassHistory onRefresh={refreshHistory} />
+        )}
+
+        {/* Substitution View */}
+        {currentView === 'substitution' && (
+          <SubstitutionManagement />
         )}
 
         {/* Dashboard View */}

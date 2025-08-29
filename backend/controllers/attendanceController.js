@@ -140,14 +140,30 @@ const teacherControllers = {
         
         console.log(`📚 Batch ${batch.name} - Teacher's subjects:`, Array.from(teacherSubjectsInBatch));
         
-        // Only include batches where teacher has at least one subject
-        if (teacherSubjectsInBatch.size > 0) {
+        // Check if teacher has approved substitutions for this batch
+        const Substitution = require('../models/Substitution');
+        const substitutions = await Substitution.find({
+          substituteTeacher: teacherId,
+          batch: batch._id,
+          status: 'approved'
+        }).populate('subject');
+        
+        const substitutionSubjects = new Set();
+        substitutions.forEach(sub => {
+          substitutionSubjects.add(sub.subject.name);
+        });
+        
+        console.log(`🔄 Batch ${batch.name} - Substitution subjects:`, Array.from(substitutionSubjects));
+        
+        // Include batches where teacher has at least one subject OR has approved substitutions
+        if (teacherSubjectsInBatch.size > 0 || substitutionSubjects.size > 0) {
+          const allSubjects = new Set([...teacherSubjectsInBatch, ...substitutionSubjects]);
           batchesWithTimetables.push({
             _id: batch._id,
             name: batch.name,
             department: batch.department,
             timetableDays: timetables.length,
-            subjects: Array.from(teacherSubjectsInBatch)
+            subjects: Array.from(allSubjects)
           });
         }
       }
@@ -253,10 +269,48 @@ const teacherControllers = {
       const teacher = await Teacher.findById(teacherId).populate('subjects');
       const canTeachSubject = teacher.subjects.some(sub => sub.name === subject);
       
-      if (!canTeachSubject) {
+      // Check if this class has been substituted out (original teacher cannot mark attendance)
+      const Substitution = require('../models/Substitution');
+      const substitutedOut = await Substitution.findOne({
+        originalTeacher: teacherId,
+        date: new Date(date),
+        startTime: classTime,
+        status: 'approved'
+      });
+
+      if (substitutedOut) {
         return res.status(403).json({
           success: false,
-          message: 'You can only mark attendance for your assigned subjects'
+          message: 'This class has been substituted out. The substitute teacher will mark attendance for this class.'
+        });
+      }
+
+      // Check if teacher has substitution rights for this class (substitute teacher can mark attendance)
+      const substitutionRights = await Substitution.findOne({
+        substituteTeacher: teacherId,
+        date: new Date(date),
+        batch: batch,
+        status: 'approved'
+      }).populate('subject');
+      
+      const hasSubstitutionRights = substitutionRights && substitutionRights.subject.name === subject;
+      
+      console.log('🔍 Substitution check:', {
+        teacherId,
+        date: new Date(date),
+        subject,
+        substitutionRights: substitutionRights ? {
+          subject: substitutionRights.subject.name,
+          batch: substitutionRights.batch,
+          date: substitutionRights.date
+        } : null,
+        hasSubstitutionRights
+      });
+      
+      if (!canTeachSubject && !hasSubstitutionRights) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only mark attendance for your assigned subjects or approved substitutions'
         });
       }
 
@@ -290,7 +344,11 @@ const teacherControllers = {
           classTime: classTime || '09:00',
           duration: duration || 60,
           takenBy: teacherId,
-          records
+          records,
+          // If this is a substitution, mark it
+          isSubstitution: hasSubstitutionRights,
+          originalTeacher: hasSubstitutionRights ? substitutionRights.originalTeacher : null,
+          substituteTeacher: hasSubstitutionRights ? teacherId : null
         });
 
         await attendance.save();
@@ -465,6 +523,8 @@ const teacherControllers = {
       .populate('takenBy', 'name')
       .populate('batch', 'name')
       .populate('records.studentId', 'name rno email')
+      .populate('originalTeacher', 'name')
+      .populate('substituteTeacher', 'name')
       .sort({ date: -1, classTime: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -502,7 +562,11 @@ const teacherControllers = {
           attendancePercentage,
           takenBy: record.takenBy.name,
           records: formattedRecords,
-          createdAt: record.createdAt
+          createdAt: record.createdAt,
+          // Substitution information
+          isSubstitution: record.isSubstitution || false,
+          originalTeacher: record.originalTeacher?.name || null,
+          substituteTeacher: record.substituteTeacher?.name || null
         };
       });
 
